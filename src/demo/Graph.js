@@ -23,6 +23,7 @@ export default function Graph ({ className, data, maxForce, playedPercent}) {
           stroke="#8884d8"
           dot={false}
           isAnimationActive={false}
+          //animationDuration={5}
         />
       </LineChart>
     </div>

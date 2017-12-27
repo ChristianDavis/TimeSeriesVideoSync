@@ -339,7 +339,7 @@ export default class App extends Component {
                 <button onClick={() => this.setState({ url: this.urlInput.value })}>Load</button>
               </td>
             </tr>
-            <tr>
+   {/*          <tr>
               <th>Interval (ms)</th>
               <td>
                 <input ref={input => { this.intervalInput = input }} type='text' placeholder='Enter Interval' defaultValue={this.state.interval} />
@@ -352,8 +352,8 @@ export default class App extends Component {
                 <input ref={input => { this.startTimeInput = input }} type='text' placeholder='Start Time' defaultValue={this.state.startTime} />
                 <button onClick={() => this.setState({ interval: this.startTimeInput.value })}>Set</button>
               </td>
-            </tr>
-            <tr>
+            </tr> */}
+            <tr> 
               <th>Custom TS Data</th>
               <td>
                 <textarea ref={textarea => { this.timeSeriesInput = textarea }} placeholder='Enter Time Series' />

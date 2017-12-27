@@ -13,6 +13,8 @@
     "build:lib": "cross-env NODE_ENV=production babel src -d lib --ignore src/demo",
     "build:demo": "cross-env NODE_ENV=production webpack --config webpack.demo.babel.js",
     "build:dist": "cross-env NODE_ENV=production webpack --config webpack.dist.babel.js",
+    "postinstall": "cross-env NODE_ENV=production webpack --config webpack.demo.babel.js",
+    "heroku": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js",
     "preversion": "npm run lint",
     "version": "auto-changelog -p && npm run build:dist && git add CHANGELOG.md dist",
     "prepublishOnly": "npm run build:lib && npm run build:dist",
