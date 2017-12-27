@@ -3,7 +3,7 @@ import webpack from 'webpack'
 import { extract } from 'extract-text-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 
-const PORT = 3000
+const PORT = process.env.PORT || 3000
 const PRODUCTION = process.env.NODE_ENV === 'production'
 const PUBLIC_PATH = PRODUCTION ? '' : `http://localhost:${PORT}/`
 
@@ -39,13 +39,12 @@ export default {
       },
       {
         test: /\.scss$/,
-        use: styleLoader([
-          'style-loader',
-          'css-loader?sourceMap',
-          'sass-loader?sourceMap'
-        ]),
+        use: ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: ['css-loader', 'sass-loader']
+        }),
         include: PATH_SRC
-      }
+      },
     ]
   },
   output: {
@@ -62,7 +61,7 @@ export default {
   devServer: {
     port: PORT,
     publicPath: PUBLIC_PATH,
-    hot: true,
+    hot: !PRODUCTION,
     historyApiFallback: true,
     stats: {
       colors: true

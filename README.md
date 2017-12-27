@@ -5,7 +5,7 @@ Quick demonstration of time series data from a sensor synced to video.
 
 ### Demo
 
-See a [live demo](http://cookpete.com/react-player), or run:
+See a [live demo](https://ts-video-test.herokuapp.com/), or run:
 
 the time series data file: [tab delim as string](https://github.com/ChristianDavis/TimeSeriesVideoSync/blob/master/src/demo/timeSeriesData.js)
 
