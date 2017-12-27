@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { findDOMNode } from 'react-dom'
 import screenfull from 'screenfull'
+import Papa from 'papaparse'
+import tsDataFile from './timeSeriesData'
 
 import './reset.scss'
 import './defaults.scss'
@@ -10,16 +12,59 @@ import './Range.scss'
 import { version } from '../../package.json'
 import ReactPlayer from '../ReactPlayer'
 import Duration from './Duration'
+import Graph from './Graph'
 
-const MULTIPLE_SOURCES = [
-  { src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4', type: 'video/mp4' },
-  { src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv', type: 'video/ogv' },
-  { src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.webm', type: 'video/webm' }
-]
+const parseTsData = (input, cb) => {
+  const reportError = (err) => {
+    console.error('Error setting data:', err)
+  }
+  try{
+    Papa.parse(input, {
+/*         delimiter: "",	// auto-detect
+      newline: "",	// auto-detect
+      quoteChar: '"',
+      dynamicTyping: false,
+      preview: 0,
+      encoding: "",
+      worker: false,
+      comments: false,
+      step: undefined, */
+      header: true,
+      complete: (results) => {
+        console.log(results.meta)
+        const parsedData = results.data.map(ts => {
+          ts.force = Math.abs(ts.xg) + Math.abs(ts.yg) + Math.abs(ts.zg)
+          return ts
+        })
+        cb(parsedData);
+      },
+      error: reportError,
+     /*  download: false,
+      skipEmptyLines: false,
+      chunk: undefined,
+      fastMode: undefined,
+      beforeFirstChunk: undefined,
+      withCredentials: undefined */
+    })
+  } catch (error) {
+    reportError(error)
+  }
+}
+
+/* const data = [
+  {name: 'Page A', uv: 4000, pv: 2400, amt: 2400},
+  {name: 'Page B', uv: 3000, pv: 1398, amt: 2210},
+  {name: 'Page C', uv: 2000, pv: 9800, amt: 2290},
+  {name: 'Page D', uv: 2780, pv: 3908, amt: 2000},
+  {name: 'Page E', uv: 1890, pv: 4800, amt: 2181},
+  {name: 'Page F', uv: 2390, pv: 3800, amt: 2500},
+  {name: 'Page G', uv: 3490, pv: 4300, amt: 2100},
+];
+ */
 
 export default class App extends Component {
   state = {
-    url: null,
+    url: 'https://www.youtube.com/watch?v=a9-ZvSzKn3U',
     playing: true,
     volume: 0.8,
     muted: false,
@@ -27,7 +72,11 @@ export default class App extends Component {
     loaded: 0,
     duration: 0,
     playbackRate: 1.0,
-    loop: false
+    maxForce: 0,
+    loop: false,
+    interval: 5, // ms
+    startTime: ':12',
+    tsData: null,
   }
   load = url => {
     this.setState({
@@ -36,6 +85,17 @@ export default class App extends Component {
       loaded: 0
     })
   }
+  componentWillMount = () => {
+    parseTsData(tsDataFile, (tsData) => {
+      const maxForce = tsData.reduce((max,ts) => {
+        if(ts.force > max) {
+          return ts.force
+        }
+        return max
+      }, this.state.maxForce)
+      this.setState({tsData, maxForce})
+    })
+  } 
   playPause = () => {
     this.setState({ playing: !this.state.playing })
   }
@@ -79,15 +139,10 @@ export default class App extends Component {
   onClickFullscreen = () => {
     screenfull.request(findDOMNode(this.player))
   }
-  onConfigSubmit = () => {
-    let config
-    try {
-      config = JSON.parse(this.configInput.value)
-    } catch (error) {
-      config = {}
-      console.error('Error setting config:', error)
-    }
-    this.setState(config)
+  onDataSubmit = () => {
+    parseTsData(this.timeSeriesInput.value, (tsData) => {
+      this.setState({tsData})
+    })
   }
   renderLoadButton = (url, label) => {
     return (
@@ -110,11 +165,11 @@ export default class App extends Component {
       fileConfig
     } = this.state
     const SEPARATOR = ' · '
-
+    const elapsed = duration * played
     return (
       <div className='app'>
         <section className='section'>
-          <h1>ReactPlayer Demo</h1>
+          <h1>Time Series Over Video Demo</h1>
           <div className='player-wrapper'>
             <ReactPlayer
               ref={this.ref}
@@ -143,12 +198,17 @@ export default class App extends Component {
               onDuration={duration => this.setState({ duration })}
             />
           </div>
-
+          <Graph 
+            data={this.state.tsData}
+            elapsed={elapsed}
+            playedPercent={played}
+            maxForce={this.state.maxForce}
+          />
           <table><tbody>
             <tr>
               <th>Controls</th>
               <td>
-                <button onClick={this.stop}>Stop</button>
+                {/* <button onClick={this.stop}>Stop</button> */}
                 <button onClick={this.playPause}>{playing ? 'Pause' : 'Play'}</button>
                 <button onClick={this.onClickFullscreen}>Fullscreen</button>
                 <button onClick={this.setPlaybackRate} value={1}>1</button>
@@ -196,7 +256,7 @@ export default class App extends Component {
         </section>
         <section className='section'>
           <table><tbody>
-            <tr>
+            {/* <tr>
               <th>YouTube</th>
               <td>
                 {this.renderLoadButton('https://www.youtube.com/watch?v=oUFJJNQGwhk', 'Test A')}
@@ -271,7 +331,7 @@ export default class App extends Component {
                 {this.renderLoadButton('https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8', 'HLS (m3u8)')}
                 {this.renderLoadButton('http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd', 'DASH (mpd)')}
               </td>
-            </tr>
+            </tr> */}
             <tr>
               <th>Custom URL</th>
               <td>
@@ -280,10 +340,24 @@ export default class App extends Component {
               </td>
             </tr>
             <tr>
-              <th>Custom config</th>
+              <th>Interval (ms)</th>
               <td>
-                <textarea ref={textarea => { this.configInput = textarea }} placeholder='Enter JSON' />
-                <button onClick={this.onConfigSubmit}>Update Config</button>
+                <input ref={input => { this.intervalInput = input }} type='text' placeholder='Enter Interval' defaultValue={this.state.interval} />
+                <button onClick={() => this.setState({ interval: this.intervalInput.value })}>Set</button>
+              </td>
+            </tr>
+            <tr>
+              <th>TS Start Time</th>
+              <td>
+                <input ref={input => { this.startTimeInput = input }} type='text' placeholder='Start Time' defaultValue={this.state.startTime} />
+                <button onClick={() => this.setState({ interval: this.startTimeInput.value })}>Set</button>
+              </td>
+            </tr>
+            <tr>
+              <th>Custom TS Data</th>
+              <td>
+                <textarea ref={textarea => { this.timeSeriesInput = textarea }} placeholder='Enter Time Series' />
+                <button onClick={this.onDataSubmit}>Update TS Data</button>
               </td>
             </tr>
           </tbody></table>
@@ -319,7 +393,7 @@ export default class App extends Component {
             </tr>
             <tr>
               <th>elapsed</th>
-              <td><Duration seconds={duration * played} /></td>
+              <td><Duration seconds={elapsed} /></td>
             </tr>
             <tr>
               <th>remaining</th>
@@ -327,13 +401,13 @@ export default class App extends Component {
             </tr>
           </tbody></table>
         </section>
-        <footer className='footer'>
+{/*         <footer className='footer'>
           Version <strong>{version}</strong>
           {SEPARATOR}
           <a href='https://github.com/CookPete/react-player'>GitHub</a>
           {SEPARATOR}
           <a href='https://www.npmjs.com/package/react-player'>npm</a>
-        </footer>
+        </footer> */}
       </div>
     )
   }
