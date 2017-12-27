@@ -39,7 +39,7 @@ export default {
       },
       {
         test: /\.scss$/,
-        use: ExtractTextPlugin.extract({
+        use: extract({
           fallback: 'style-loader',
           use: ['css-loader', 'sass-loader']
         }),
