@@ -39,6 +39,7 @@ export default {
       },
       {
         test: /\.scss$/,
+        compiler: [{ not: [/^html-webpack-plugin/] }],
         use: extract({
           fallback: 'style-loader',
           use: ['css-loader', 'sass-loader']
