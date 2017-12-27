@@ -7,10 +7,6 @@
     "start": "webpack-dev-server --devtool eval-source-map --history-api-fallback --open",
     "build": "webpack -p"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rafrex/spa-github-pages.git"
-  },
   "author": "Rafael Pedicini <code@rafrex.com>",
   "license": "MIT",
   "dependencies": {
